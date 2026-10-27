@@ -1,63 +1,87 @@
-import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Projects from "./pages/Projects";
-import Contact from "./pages/Contact";
+import { useEffect } from "react";
+import { motion, useScroll, useSpring } from "motion/react";
+import { useSite } from "./context/SiteContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import Cursor from "./components/Cursor";
+import Hero from "./sections/Hero";
+import About from "./sections/About";
+import Skills from "./sections/Skills";
+import Experience from "./sections/Experience";
+import Projects from "./sections/Projects";
+import Contact from "./sections/Contact";
+
+// Eski sayfa adresleri (/projects, /contact) tek sayfadaki bölümlere yönlendirilir
+const ESKI_ADRESLER = { "/projects": "projeler", "/contact": "iletisim" };
+
+function IlerlemeCubugu() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
+  return (
+    <motion.div
+      aria-hidden
+      className="fixed inset-x-0 top-0 z-[70] h-0.5 origin-left bg-gradient-to-r from-accent to-accent-2"
+      style={{ scaleX }}
+    />
+  );
+}
+
+function Yukleniyor() {
+  const { hata, tekrarDene, t } = useSite();
+  return (
+    <div className="grid min-h-[100svh] place-items-center px-4">
+      {hata ? (
+        <div className="text-center">
+          <p className="text-muted">{t.hata}</p>
+          <button onClick={tekrarDene} className="buton-ana mt-4">
+            {t.tekrarDene}
+          </button>
+        </div>
+      ) : (
+        <p className="font-mono text-sm text-muted">
+          <span className="text-accent">$</span> {t.yukleniyor}
+          <span className="ml-1 inline-block h-4 w-2 translate-y-0.5 animate-blink bg-accent" />
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { veri } = useSite();
 
-  // 🌍 Dil durumu - localStorage ile kalıcı
-  const [lang, setLang] = useState("tr");
-
-  // Sayfa ilk yüklendiğinde localStorage'dan dil al
   useEffect(() => {
-    const kayitliDil = localStorage.getItem("lang");
-    if (kayitliDil) {
-      setLang(kayitliDil);
-    }
+    const hedef = ESKI_ADRESLER[window.location.pathname];
+    if (hedef) window.history.replaceState(null, "", `/#${hedef}`);
   }, []);
 
-  // Dil değiştiğinde localStorage'a yaz
+  // Veri geldikten sonra adres çubuğundaki bölüme kaydır
   useEffect(() => {
-    localStorage.setItem("lang", lang);
-  }, [lang]);
+    if (!veri || !window.location.hash) return;
+    const el = document.getElementById(window.location.hash.slice(1));
+    el?.scrollIntoView();
+  }, [veri]);
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <Router>
-        <Navbar
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-          lang={lang}
-          setLang={setLang}
-        />
-
-        <main
-          className={`flex-grow transition-colors duration-500 ${
-            darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-          }`}
-        >
-          <Routes>
-            <Route
-              path="/"
-              element={<Home darkMode={darkMode} lang={lang} />}
-            />
-            <Route
-              path="/projects"
-              element={<Projects darkMode={darkMode} lang={lang} />}
-            />
-            <Route
-              path="/contact"
-              element={<Contact darkMode={darkMode} lang={lang} />}
-            />
-          </Routes>
-        </main>
-
-        <Footer darkMode={darkMode} lang={lang} />
-      </Router>
-    </div>
+    <>
+      <IlerlemeCubugu />
+      <Cursor />
+      <Navbar />
+      <main className="relative z-10">
+        {veri ? (
+          <>
+            <Hero />
+            <About />
+            <Skills />
+            <Experience />
+            <Projects />
+            <Contact />
+          </>
+        ) : (
+          <Yukleniyor />
+        )}
+      </main>
+      {veri && <Footer />}
+    </>
   );
 }

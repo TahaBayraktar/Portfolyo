@@ -1,133 +1,244 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { FiMoon, FiSun, FiMonitor, FiMenu, FiX, FiDroplet } from "react-icons/fi";
+import { useSite } from "../context/SiteContext";
+import { vurguRenkleri } from "../i18n";
 
-export default function Navbar({ darkMode, setDarkMode, lang, setLang }) {
-  const [veri, setVeri] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
+const BOLUMLER = ["hakkimda", "yetenekler", "deneyim", "projeler", "iletisim"];
+
+function useAktifBolum() {
+  const [aktif, setAktif] = useState("");
+  useEffect(() => {
+    const gozlemci = new IntersectionObserver(
+      (girdiler) => {
+        girdiler.forEach((g) => g.isIntersecting && setAktif(g.target.id));
+      },
+      { rootMargin: "-45% 0px -50% 0px" }
+    );
+    // Bölümler veri gelince render olduğu için kısa aralıklarla tekrar bağlan
+    const bagla = () => BOLUMLER.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) gozlemci.observe(el);
+    });
+    bagla();
+    const zamanlayici = setTimeout(bagla, 1500);
+    return () => {
+      clearTimeout(zamanlayici);
+      gozlemci.disconnect();
+    };
+  }, []);
+  return aktif;
+}
+
+function TemaSecici() {
+  const { theme, setTheme, t } = useSite();
+  const secenekler = [
+    { deger: "light", ikon: FiSun, ad: t.ayarlar.acik },
+    { deger: "dark", ikon: FiMoon, ad: t.ayarlar.koyu },
+    { deger: "system", ikon: FiMonitor, ad: t.ayarlar.sistem },
+  ];
+  return (
+    <div className="flex rounded-full border border-line bg-surface/60 p-0.5" role="radiogroup" aria-label={t.ayarlar.tema}>
+      {secenekler.map(({ deger, ikon: Ikon, ad }) => (
+        <button
+          key={deger}
+          role="radio"
+          aria-checked={theme === deger}
+          title={ad}
+          aria-label={ad}
+          onClick={() => setTheme(deger)}
+          className={`relative grid h-8 w-8 place-items-center rounded-full text-sm transition-colors ${
+            theme === deger ? "text-bg" : "text-muted hover:text-fg"
+          }`}
+        >
+          {theme === deger && (
+            <motion.span layoutId="tema-secili" className="absolute inset-0 rounded-full bg-accent" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+          )}
+          <Ikon className="relative" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function RenkSecici() {
+  const { accent, setAccent, t } = useSite();
+  const [acik, setAcik] = useState(false);
+  const ref = useRef(null);
 
   useEffect(() => {
-    const veriGetir = async () => {
-      try {
-        const yanit = await fetch(
-          `https://raw.githubusercontent.com/TahaBayraktar/PortfoyJson/main/KendiniTanit_${lang}.json?timestamp=${Date.now()}`
-        );
-        const veri = await yanit.json();
-        setVeri(veri);
-      } catch (hata) {
-        console.error("Navbar verisi alınamadı:", hata);
-      }
-    };
-
-    veriGetir();
-  }, [lang]);
-
-  const menuItems = [
-    { path: "/", label: lang === "tr" ? "Anasayfa" : "Home" },
-    { path: "/projects", label: lang === "tr" ? "Projeler" : "Projects" },
-    { path: "/contact", label: lang === "tr" ? "İletişim" : "Contact" }
-  ];
+    if (!acik) return;
+    const disTik = (e) => !ref.current?.contains(e.target) && setAcik(false);
+    document.addEventListener("pointerdown", disTik);
+    return () => document.removeEventListener("pointerdown", disTik);
+  }, [acik]);
 
   return (
-    <header className={`shadow-md sticky top-0 z-50 transition-colors duration-500
-      ${darkMode 
-        ? "bg-gray-800/90 backdrop-blur-md border-b border-gray-700 text-white" 
-        : "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white bg-[length:200%_200%] animate-gradient-x"}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          
-          {/* Logo + İsim */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-lg group-hover:scale-105 transition-transform duration-300">
-              <img
-                src={veri?.profilFoto || "/Taha.jpeg"}
-                alt="Profil"
-                className="object-cover w-full h-full"
-              />
-            </div>
-            <span className="text-white text-lg font-semibold tracking-wide group-hover:tracking-wider transition-all duration-300">
-              {veri?.adSoyad || "Taha Bayraktar"}
-            </span>
-          </Link>
-
-          {/* Menü & Butonlar */}
-          <div className="flex items-center space-x-3">
-            
-            {/* Masaüstü Menü */}
-            <nav className="hidden lg:flex space-x-6 text-lg">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="hover:text-yellow-300 transition hover:underline underline-offset-4"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold shadow-md transition duration-500 hover:brightness-110
-                ${darkMode 
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white animate-gradient-x bg-[length:200%_200%]"
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setAcik((a) => !a)}
+        aria-label={t.ayarlar.renk}
+        aria-expanded={acik}
+        title={t.ayarlar.renk}
+        className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface/60 text-accent transition-colors hover:border-accent/60"
+      >
+        <FiDroplet />
+      </button>
+      <AnimatePresence>
+        {acik && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="kart absolute right-0 top-12 flex gap-2 bg-surface p-2 shadow-xl"
+          >
+            {vurguRenkleri.map(({ ad, renk }) => (
+              <button
+                key={ad}
+                onClick={() => setAccent(ad)}
+                aria-label={ad}
+                title={ad}
+                className={`h-7 w-7 rounded-full ring-offset-2 ring-offset-surface transition-transform hover:scale-110 ${
+                  accent === ad ? "ring-2 ring-fg" : ""
                 }`}
-            >
-              {darkMode
-                ? `☀️ ${lang === "tr" ? "Gündüz" : "Light"}`
-                : `🌙 ${lang === "tr" ? "Karanlık" : "Dark"}`}
-            </button>
-
-            {/* Dil Değiştirici */}
-            <button
-  onClick={() => setLang(lang === "tr" ? "en" : "tr")}
-  className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-md transition duration-300 border
-    ${darkMode
-      ? "bg-gray-700 text-white hover:bg-gray-600 border-gray-600"
-      : "bg-transparent text-white border-white hover:bg-white hover:text-black"
-    }`}
->
-  {lang === "tr" ? "🇹🇷 TR" : "🇬🇧 EN"}
-</button>
-
-            {/* Hamburger Menü Butonu */}
-            <div className="lg:hidden">
-              <button onClick={() => setIsOpen(!isOpen)} className="focus:outline-none">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {isOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobil Menü */}
-        {isOpen && (
-          <div className="lg:hidden flex flex-col space-y-4 mt-2 pb-4 text-center">
-            {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className="hover:text-yellow-300"
-              >
-                {item.label}
-              </Link>
+                style={{ backgroundColor: renk }}
+              />
             ))}
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function DilSecici() {
+  const { lang, setLang, t } = useSite();
+  return (
+    <button
+      onClick={() => setLang(lang === "tr" ? "en" : "tr")}
+      aria-label={t.ayarlar.dil}
+      title={t.ayarlar.dil}
+      className="flex h-9 items-center gap-1 rounded-full border border-line bg-surface/60 px-3 font-mono text-xs font-semibold transition-colors hover:border-accent/60"
+    >
+      <span className={lang === "tr" ? "text-accent" : "text-muted"}>TR</span>
+      <span className="text-line">/</span>
+      <span className={lang === "en" ? "text-accent" : "text-muted"}>EN</span>
+    </button>
+  );
+}
+
+export default function Navbar() {
+  const { veri, t } = useSite();
+  const [kaydirildi, setKaydirildi] = useState(false);
+  const [menuAcik, setMenuAcik] = useState(false);
+  const aktif = useAktifBolum();
+
+  useEffect(() => {
+    const dinle = () => setKaydirildi(window.scrollY > 20);
+    dinle();
+    window.addEventListener("scroll", dinle, { passive: true });
+    return () => window.removeEventListener("scroll", dinle);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = menuAcik ? "hidden" : "";
+  }, [menuAcik]);
+
+  const profil = veri?.profil;
+
+  return (
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+        kaydirildi || menuAcik ? "border-b border-line/80 bg-bg/75 backdrop-blur-xl" : "border-b border-transparent"
+      }`}
+    >
+      <div className="container-site flex h-16 items-center justify-between gap-4">
+        <a href="#" className="group flex items-center gap-3" onClick={() => setMenuAcik(false)}>
+          {profil?.profilFoto && (
+            <img
+              src={profil.profilFoto}
+              alt=""
+              className="h-9 w-9 rounded-full object-cover ring-2 ring-line transition-all group-hover:ring-accent"
+            />
+          )}
+          <span className="font-mono text-sm font-semibold">
+            <span className="text-accent">~/</span>
+            {(profil?.adSoyad || "Taha Bayraktar").toLowerCase().replace(/\s+/g, "-")}
+          </span>
+        </a>
+
+        <nav className="hidden items-center gap-1 lg:flex">
+          {BOLUMLER.map((id) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className={`relative rounded-full px-3.5 py-1.5 text-sm transition-colors ${
+                aktif === id ? "text-fg" : "text-muted hover:text-fg"
+              }`}
+            >
+              {aktif === id && (
+                <motion.span layoutId="nav-aktif" className="absolute inset-0 -z-10 rounded-full bg-surface ring-1 ring-line" transition={{ type: "spring", stiffness: 400, damping: 32 }} />
+              )}
+              {t.nav[id]}
+            </a>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 sm:flex">
+            <TemaSecici />
+            <RenkSecici />
+          </div>
+          <DilSecici />
+          <button
+            onClick={() => setMenuAcik((a) => !a)}
+            aria-label={t.ayarlar.menu}
+            aria-expanded={menuAcik}
+            className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface/60 text-lg lg:hidden"
+          >
+            {menuAcik ? <FiX /> : <FiMenu />}
+          </button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {menuAcik && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "100dvh" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden lg:hidden"
+          >
+            <nav className="container-site flex flex-col gap-1 pt-6">
+              {BOLUMLER.map((id, i) => (
+                <motion.a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={() => setMenuAcik(false)}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.05 * i + 0.1 }}
+                  className="flex items-baseline gap-3 border-b border-line py-4 text-2xl font-semibold"
+                >
+                  <span className="font-mono text-sm text-accent">0{i + 1}</span>
+                  {t.nav[id]}
+                </motion.a>
+              ))}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="mt-6 flex items-center gap-3 sm:hidden"
+              >
+                <TemaSecici />
+                <RenkSecici />
+              </motion.div>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

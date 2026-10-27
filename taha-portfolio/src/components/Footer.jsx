@@ -1,88 +1,59 @@
-import { useEffect, useState } from "react";
 import { FaGithub, FaLinkedin, FaEnvelope, FaInstagram } from "react-icons/fa";
+import { FiArrowUp } from "react-icons/fi";
+import { useSite } from "../context/SiteContext";
 
-export default function Footer({ darkMode, lang }) {
-  const [footerVeri, setFooterVeri] = useState(null);
+export default function Footer() {
+  const { veri, t } = useSite();
+  const footer = veri?.profil.footer || {};
+  const isim = footer.isim || "Taha Bayraktar";
+  // JSON'daki e-posta "mailto:" ile ya da düz yazılmış olabilir
+  const mail = footer.email ? `mailto:${footer.email.replace(/^mailto:/, "")}` : null;
 
-  useEffect(() => {
-    const veriGetir = async () => {
-      try {
-        const yanit = await fetch(
-          `https://raw.githubusercontent.com/TahaBayraktar/PortfoyJson/main/KendiniTanit_${lang}.json?timestamp=${new Date().getTime()}`
-        );
-        const veri = await yanit.json();
-        setFooterVeri(veri.footer);
-      } catch (error) {
-        console.error("Footer verisi alınamadı:", error);
-      }
-    };
-
-    veriGetir();
-  }, [lang]);
+  const linkler = [
+    { href: footer.github, ikon: FaGithub, ad: "GitHub" },
+    { href: footer.linkedin, ikon: FaLinkedin, ad: "LinkedIn" },
+    { href: mail, ikon: FaEnvelope, ad: "E-mail" },
+    { href: footer.instagram, ikon: FaInstagram, ad: "Instagram" },
+  ].filter((l) => l.href);
 
   return (
-    <footer
-      className={`py-10 mt-0 w-full transition-colors duration-500 ${
-        darkMode ? "bg-gray-800 text-white" : "bg-indigo-800 text-white"
-      }`}
-    >
-      <div className="max-w-5xl mx-auto px-4 grid md:grid-cols-2 gap-6">
-        {/* Sol kısım */}
-        <div>
-          <h3 className="text-lg font-semibold mb-2">
-            {footerVeri?.isim || "Taha Bayraktar"}
-          </h3>
-          <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-200"}`}>
-            {footerVeri?.aciklama ||
-              (lang === "tr"
-                ? "Frontend'e tutkuyla bağlı, kullanıcı odaklı arayüzler geliştiren bir mühendisim."
-                : "A passionate frontend developer focused on user-centric interfaces.")}
+    <footer className="border-t border-line">
+      <div className="container-site flex flex-col gap-8 py-10 md:flex-row md:items-center md:justify-between">
+        <div className="max-w-md">
+          <p className="font-mono text-sm font-semibold">
+            <span className="text-accent">~/</span>
+            {isim.toLowerCase().replace(/\s+/g, "-")}
           </p>
+          {footer.aciklama && <p className="mt-2 text-sm text-muted">{footer.aciklama}</p>}
         </div>
 
-        {/* Sağ kısım */}
-        <div className="flex flex-col md:items-end items-start">
-          <div className="flex space-x-5 text-xl mb-3">
+        <div className="flex items-center gap-2">
+          {linkler.map(({ href, ikon: Ikon, ad }) => (
             <a
-              href={footerVeri?.github}
-              target="_blank"
+              key={ad}
+              href={href}
+              target={href.startsWith("mailto:") ? undefined : "_blank"}
               rel="noopener noreferrer"
-              className="hover:text-indigo-300 transition"
+              aria-label={ad}
+              className="grid h-10 w-10 place-items-center rounded-full border border-line text-muted transition-all hover:-translate-y-0.5 hover:border-accent/60 hover:text-accent"
             >
-              <FaGithub />
+              <Ikon />
             </a>
-            <a
-              href={footerVeri?.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-indigo-300 transition"
-            >
-              <FaLinkedin />
-            </a>
-            <a
-              href={`mailto:${footerVeri?.email}`}
-              className="hover:text-indigo-300 transition"
-            >
-              <FaEnvelope />
-            </a>
-            <a
-              href={footerVeri?.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-indigo-300 transition"
-            >
-              <FaInstagram />
-            </a>
-          </div>
-          <p className="text-xs text-gray-300">
-            &copy; {new Date().getFullYear()} {footerVeri?.isim || "Taha Bayraktar"}.{" "}
-            {lang === "tr"
-              ? "Tüm hakları saklıdır."
-              : "All rights reserved."}
-            <br />
-            <span className="italic">Built with React + TailwindCSS ⚛️</span>
-          </p>
+          ))}
+          <a
+            href="#"
+            aria-label={t.yukari}
+            title={t.yukari}
+            className="ml-2 grid h-10 w-10 place-items-center rounded-full bg-accent text-bg transition-transform hover:-translate-y-0.5"
+          >
+            <FiArrowUp />
+          </a>
         </div>
+      </div>
+      <div className="border-t border-line">
+        <p className="container-site py-5 text-center font-mono text-xs text-muted md:text-left">
+          © {new Date().getFullYear()} {isim}. {t.haklar}
+        </p>
       </div>
     </footer>
   );

@@ -1,12 +1,16 @@
-# React + Vite
+# Taha Bayraktar — Portföy
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Kişisel portföy sitesi: [tahabayraktar.com](https://tahabayraktar.com)
 
-Currently, two official plugins are available:
+- **Teknolojiler:** React 19, Vite, Tailwind CSS, Motion (Framer Motion)
+- **İçerik:** Tüm metin, proje ve görseller [PortfoyJson](https://github.com/TahaBayraktar/PortfoyJson) reposundan (`KendiniTanit_xx.json`, `Proje_xx.json`, `Iletisim_xx.json`) çekilir. İçeriği güncellemek için kod değişikliği gerekmez.
+- **Arayüz metinleri:** `src/i18n.js` (TR / EN)
+- **Tema:** Açık / koyu / sistem + vurgu rengi seçici; renkler `src/index.css` içindeki CSS değişkenlerinde.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev     # geliştirme
+npm run build   # üretim derlemesi
+```
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Vercel'e `main` dalına push edildiğinde otomatik yayınlanır.

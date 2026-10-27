@@ -2,87 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Gradient arka plan animasyonu */
-@keyframes gradient-x {
-  0%, 100% {
-    background-position: 0% 50%;
+/* Renkler RGB üçlüsü olarak tutulur, Tailwind'de opaklıkla birlikte kullanılabilir (bg-accent/20 gibi) */
+@layer base {
+  :root {
+    --bg: 250 250 250;
+    --surface: 255 255 255;
+    --fg: 24 24 27;
+    --muted: 82 82 91;
+    --line: 228 228 231;
+    --accent: 8 145 178;
+    --accent-2: 37 99 235;
+    color-scheme: light;
   }
-  50% {
-    background-position: 100% 50%;
+
+  .dark {
+    --bg: 9 9 11;
+    --surface: 24 24 27;
+    --fg: 244 244 245;
+    --muted: 161 161 170;
+    --line: 39 39 42;
+    --accent: 34 211 238;
+    --accent-2: 96 165 250;
+    color-scheme: dark;
+  }
+
+  [data-accent="emerald"] { --accent: 5 150 105; --accent-2: 13 148 136; }
+  .dark[data-accent="emerald"] { --accent: 52 211 153; --accent-2: 45 212 191; }
+
+  [data-accent="violet"] { --accent: 124 58 237; --accent-2: 192 38 211; }
+  .dark[data-accent="violet"] { --accent: 167 139 250; --accent-2: 232 121 249; }
+
+  [data-accent="amber"] { --accent: 217 119 6; --accent-2: 234 88 12; }
+  .dark[data-accent="amber"] { --accent: 251 191 36; --accent-2: 251 146 60; }
+
+  [data-accent="rose"] { --accent: 225 29 72; --accent-2: 219 39 119; }
+  .dark[data-accent="rose"] { --accent: 251 113 133; --accent-2: 244 114 182; }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  ::selection {
+    background: rgb(var(--accent) / 0.3);
+  }
+
+  /* Özel imleç aktifken sistem imlecini gizle */
+  html.cursor-ozel,
+  html.cursor-ozel * {
+    cursor: none !important;
   }
 }
 
-.animate-gradient-x {
-  animation: gradient-x 8s ease infinite;
-}
-
-/* Fade-in efektleri */
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 1s ease-out forwards;
+@layer components {
+  .container-site {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
   }
 
-  .animate-fade-in-up {
-    animation: fadeInUp 1s ease-out forwards;
+  .kart {
+    @apply rounded-2xl border border-line bg-surface/70 backdrop-blur-sm;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  .etiket {
+    @apply inline-flex items-center rounded-full border border-line bg-bg/60 px-2.5 py-0.5 font-mono text-xs text-muted;
   }
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .gradient-yazi {
+    @apply bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent;
   }
-}
 
-/* Marquee kaydırma efekti */
-@keyframes marquee {
-  0% {
-    transform: translateX(0%);
+  .buton {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
   }
-  100% {
-    transform: translateX(-50%);
+
+  .buton-ana {
+    @apply buton bg-accent text-bg hover:bg-accent/85;
+  }
+
+  .buton-ikincil {
+    @apply buton border border-line bg-surface/60 text-fg hover:border-accent/60 hover:text-accent;
   }
 }
 
-.animate-marquee {
-  animation: marquee 20s linear infinite;
-}
-@layer utilities {
-  .animate-fade-in-up {
-    animation: fadeInUp 0.8s ease-out both;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}
-html,
-body,
-#root {
-  height: 100%;
-}
-/* Özel scroll görünümü */
-.scrollbar-thin::-webkit-scrollbar {
-  height: 6px;
+/* Arka plandaki ince ızgara deseni */
+.izgara-arka {
+  background-image:
+    linear-gradient(rgb(var(--line) / 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--line) / 0.6) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 20%, transparent 70%);
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgba(90, 90, 90, 0.4);
-  border-radius: 10px;
+/* Spotlight kartı: imlecin altında yumuşak ışık */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    400px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(var(--accent) / 0.12),
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -1;
+  pointer-events: none;
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+
+.scrollbar-yok::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-yok {
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

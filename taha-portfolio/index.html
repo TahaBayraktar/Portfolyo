@@ -1,27 +1,51 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
-    <!-- Sayfa Temel Ayarları -->
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Taha Bayraktar | Backend Developer</title>
-<meta name="description" content="Taha Bayraktar'ın resmi portföyü. Backend geliştirme ve yazılım projeleri hakkında bilgi alabilirsiniz.">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Taha Bayraktar | Backend Developer</title>
+    <meta name="description" content="Taha Bayraktar'ın portföyü. Backend geliştirme ve yazılım projeleri hakkında bilgi alabilirsiniz." />
+    <meta name="theme-color" content="#09090b" />
 
-<!-- 🔥 Favicon (sekmedeki simge) -->
-<link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
 
-<!-- 🌐 Open Graph (Facebook, LinkedIn, WhatsApp...) -->
-<meta property="og:title" content="Taha Bayraktar | Backend Developer" />
-<meta property="og:description" content="Profesyonel projelerim, yazılım deneyimlerim ve teknoloji tutkumu keşfet!" />
-<meta property="og:image" content="https://tahabayraktar.com/favicon.png" />
-<meta property="og:url" content="https://tahabayraktar.com" />
-<meta property="og:type" content="website" />
+    <!-- Open Graph -->
+    <meta property="og:title" content="Taha Bayraktar | Backend Developer" />
+    <meta property="og:description" content="Profesyonel projelerim, yazılım deneyimlerim ve teknoloji tutkumu keşfet!" />
+    <meta property="og:image" content="https://raw.githubusercontent.com/TahaBayraktar/PortfoyJson/main/Fotograflar/Taha.jpeg" />
+    <meta property="og:url" content="https://tahabayraktar.com" />
+    <meta property="og:type" content="website" />
 
-<!-- 🐦 Twitter Card -->
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Taha Bayraktar | Backend Developer" />
-<meta name="twitter:description" content="Projelerime ve yazılım yolculuğuma göz at!" />
-<meta name="twitter:image" content="https://tahabayraktar.com/favicon.png" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Taha Bayraktar | Backend Developer" />
+    <meta name="twitter:description" content="Projelerime ve yazılım yolculuğuma göz at!" />
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/TahaBayraktar/PortfoyJson/main/Fotograflar/Taha.jpeg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://raw.githubusercontent.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tema / renk / dil tercihini ilk boyamadan önce uygula (yanıp sönmeyi önler) -->
+    <script>
+      (function () {
+        try {
+          var d = document.documentElement;
+          var tema = localStorage.getItem("theme") || "system";
+          var koyu = tema === "dark" || (tema === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+          d.classList.toggle("dark", koyu);
+          d.dataset.accent = localStorage.getItem("accent") || "cyan";
+          var dil = localStorage.getItem("lang");
+          if (dil) d.lang = dil;
+        } catch (e) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

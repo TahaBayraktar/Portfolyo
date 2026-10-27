@@ -1,33 +1,43 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+const renk = (degisken) => `rgb(var(--${degisken}) / <alpha-value>)`;
+
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
+      colors: {
+        bg: renk("bg"),
+        surface: renk("surface"),
+        fg: renk("fg"),
+        muted: renk("muted"),
+        line: renk("line"),
+        accent: renk("accent"),
+        "accent-2": renk("accent-2"),
+      },
+      fontFamily: {
+        sans: ['"Inter"', "system-ui", "sans-serif"],
+        mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
+      },
       keyframes: {
-        'gradient-x': {
-          '0%, 100%': {
-            backgroundPosition: '0% 50%',
-          },
-          '50%': {
-            backgroundPosition: '100% 50%',
-          },
-        },
         marquee: {
-          '0%': { transform: 'translateX(0%)' },
-          '100%': { transform: 'translateX(-100%)' },
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+        "spin-slow": {
+          to: { transform: "rotate(360deg)" },
+        },
+        blink: {
+          "0%, 49%": { opacity: "1" },
+          "50%, 100%": { opacity: "0" },
         },
       },
       animation: {
-        'marquee-desktop': 'marquee 30s linear infinite',
-        'marquee-mobile': 'marquee 25s linear infinite',
-      },
-      backgroundSize: {
-        '200': '200% 200%',
+        marquee: "marquee 35s linear infinite",
+        "spin-slow": "spin-slow 8s linear infinite",
+        blink: "blink 1s step-end infinite",
       },
     },
   },
   plugins: [],
-}
+};
