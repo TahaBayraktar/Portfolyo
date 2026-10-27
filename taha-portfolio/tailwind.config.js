@@ -23,6 +23,10 @@ export default {
         "spin-slow": {
           to: { transform: "rotate(360deg)" },
         },
+        ilerle: {
+          from: { transform: "scaleX(0)" },
+          to: { transform: "scaleX(1)" },
+        },
         blink: {
           "0%, 49%": { opacity: "1" },
           "50%, 100%": { opacity: "0" },
@@ -31,6 +35,7 @@ export default {
       animation: {
         "spin-slow": "spin-slow 8s linear infinite",
         blink: "blink 1s step-end infinite",
+        ilerle: "ilerle 4s linear forwards",
       },
     },
   },

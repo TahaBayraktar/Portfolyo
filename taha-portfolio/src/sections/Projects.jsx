@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { FiArrowUpRight, FiChevronLeft, FiChevronRight, FiExternalLink, FiFileText, FiImage, FiX } from "react-icons/fi";
 import { FaGithub } from "react-icons/fa";
 import { useSite } from "../context/SiteContext";
@@ -45,9 +45,9 @@ function ProjeLinkleri({ proje, kucuk = false }) {
   );
 }
 
-function ProjeModal({ proje, kapat }) {
+function ProjeModal({ proje, baslangic = 0, kapat }) {
   const { t } = useSite();
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(baslangic);
   const [yon, setYon] = useState(1);
   const gorseller = proje.gorseller || [];
   const { ad, alt } = basligiAyir(proje.baslik);
@@ -184,46 +184,155 @@ function ProjeModal({ proje, kapat }) {
   );
 }
 
-function ProjeKarti({ proje, sira, ac }) {
+const GALERI_SURE = 4; // sn
+
+// Kart kapağı: kendiliğinden geçen, kaydırılabilen galeri. Kaydırmadan dokununca modal açılır.
+function KartGalerisi({ proje, ad, sira, duraklat, ac }) {
   const { t } = useSite();
+  const gorseller = proje.gorseller || [];
+  const [index, setIndex] = useState(0);
+  const [yon, setYon] = useState(1);
+  const [ustunde, setUstunde] = useState(false);
+  const ref = useRef(null);
+  const dokunus = useRef(null);
+  const gorunur = useInView(ref, { amount: 0.4 });
+  const azHareket = useReducedMotion();
+  const otomatik = gorseller.length > 1 && !azHareket;
+  const bekle = duraklat || ustunde || !gorunur;
+
+  const git = useCallback(
+    (adim) => {
+      setYon(adim);
+      setIndex((i) => (i + adim + gorseller.length) % gorseller.length);
+    },
+    [gorseller.length]
+  );
+
+  // Geçişte boş kare görünmesin diye sıradaki görseli önceden yükle
+  useEffect(() => {
+    const liste = proje.gorseller || [];
+    if (liste.length > 1) new Image().src = liste[(index + 1) % liste.length];
+  }, [index, proje.gorseller]);
+
+  const bas = (e) => {
+    dokunus.current = { x: e.clientX, y: e.clientY };
+  };
+  const birak = (e) => {
+    const d = dokunus.current;
+    dokunus.current = null;
+    if (!d) return;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) git(dx < 0 ? 1 : -1);
+    else if (Math.abs(dx) < 8 && Math.abs(dy) < 8) ac(index);
+  };
+
+  return (
+    <div
+      ref={ref}
+      role="button"
+      tabIndex={0}
+      aria-label={`${ad} – ${t.incele}`}
+      onPointerDown={bas}
+      onPointerUp={birak}
+      onPointerCancel={() => (dokunus.current = null)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          ac(index);
+        }
+      }}
+      onMouseEnter={() => setUstunde(true)}
+      onMouseLeave={() => setUstunde(false)}
+      className="relative aspect-[16/10] w-full cursor-pointer touch-pan-y select-none overflow-hidden border-b border-line bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+    >
+      <AnimatePresence initial={false} custom={yon} mode="popLayout">
+        <motion.img
+          key={index}
+          src={gorseller[index]}
+          alt=""
+          draggable={false}
+          decoding="async"
+          loading={index === 0 ? "lazy" : undefined}
+          custom={yon}
+          variants={{
+            gir: (y) => ({ x: `${y * 100}%` }),
+            merkez: { x: 0 },
+            cik: (y) => ({ x: `${y * -100}%` }),
+          }}
+          initial="gir"
+          animate="merkez"
+          exit="cik"
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-0 h-full w-full object-cover object-top"
+        />
+      </AnimatePresence>
+
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+      {gorseller.length > 1 && (
+        <>
+          {[
+            { adim: -1, ikon: FiChevronLeft, etiket: t.onceki, konum: "left-3" },
+            { adim: 1, ikon: FiChevronRight, etiket: t.sonraki, konum: "right-3" },
+          ].map(({ adim, ikon: Ikon, etiket, konum }) => (
+            <button
+              key={adim}
+              aria-label={etiket}
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                git(adim);
+              }}
+              className={`absolute ${konum} top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-lg text-white opacity-0 transition-opacity hover:bg-black/80 group-hover:opacity-100 sm:grid`}
+            >
+              <Ikon />
+            </button>
+          ))}
+
+          <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+            {gorseller.map((g, i) => (
+              <span
+                key={g}
+                className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? "w-4 bg-white" : "w-1.5 bg-white/50"}`}
+              />
+            ))}
+          </div>
+
+          {otomatik && (
+            // Çubuk dolunca sonraki görsele geçilir; duraklatınca çubuk da durur
+            <span
+              key={index}
+              onAnimationEnd={() => git(1)}
+              className="absolute inset-x-0 bottom-0 h-0.5 origin-left animate-ilerle bg-accent"
+              style={{
+                animationDuration: `${GALERI_SURE}s`,
+                animationDelay: index === 0 ? `${(sira - 1) * 0.7}s` : "0s",
+                animationPlayState: bekle ? "paused" : "running",
+              }}
+            />
+          )}
+        </>
+      )}
+
+      <span className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-white">
+        <FiImage /> {index + 1}/{gorseller.length}
+      </span>
+      <span className="pointer-events-none absolute right-3 top-3 grid h-10 w-10 translate-y-2 place-items-center rounded-full bg-accent text-lg text-bg opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+        <FiArrowUpRight />
+      </span>
+    </div>
+  );
+}
+
+function ProjeKarti({ proje, sira, duraklat, ac }) {
   const { ad, alt } = basligiAyir(proje.baslik);
   const alan = alanAdi(proje.projeLink);
-  const kapak = proje.gorseller?.[0];
-  const ikinci = proje.gorseller?.[1];
 
   return (
     <SpotlightCard className="group flex h-full flex-col overflow-hidden hover:-translate-y-1">
-      <button
-        onClick={ac}
-        className="relative aspect-[16/10] w-full overflow-hidden border-b border-line bg-bg text-left"
-        aria-label={`${ad} – ${t.incele}`}
-      >
-        {kapak && (
-          <img
-            src={kapak}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-top transition-all duration-700 group-hover:scale-105"
-          />
-        )}
-        {ikinci && (
-          <img
-            src={ikinci}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-top opacity-0 transition-opacity duration-700 group-hover:opacity-100"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-white">
-          <FiImage /> {proje.gorseller?.length || 0} {t.gorsel}
-        </span>
-        <span className="absolute right-3 top-3 grid h-10 w-10 translate-y-2 place-items-center rounded-full bg-accent text-lg text-bg opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-          <FiArrowUpRight />
-        </span>
-      </button>
+      <KartGalerisi proje={proje} ad={ad} sira={sira} duraklat={duraklat} ac={ac} />
 
       <div className="flex flex-1 flex-col p-5 sm:p-6">
         <div className="mb-2 flex items-center justify-between gap-3 font-mono text-xs text-muted">
@@ -253,14 +362,21 @@ export default function Projects() {
         <div className="grid gap-5 md:grid-cols-2">
           {veri.projeler.map((proje, i) => (
             <Reveal key={proje.baslik} delay={(i % 2) * 0.08}>
-              <ProjeKarti proje={proje} sira={i + 1} ac={() => setSecili(proje)} />
+              <ProjeKarti
+                proje={proje}
+                sira={i + 1}
+                duraklat={!!secili}
+                ac={(baslangic) => setSecili({ proje, baslangic })}
+              />
             </Reveal>
           ))}
         </div>
       </div>
 
       {createPortal(
-        <AnimatePresence>{secili && <ProjeModal proje={secili} kapat={kapat} />}</AnimatePresence>,
+        <AnimatePresence>
+          {secili && <ProjeModal proje={secili.proje} baslangic={secili.baslangic} kapat={kapat} />}
+        </AnimatePresence>,
         document.body
       )}
     </section>
