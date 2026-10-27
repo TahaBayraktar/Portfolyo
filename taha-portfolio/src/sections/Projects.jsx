@@ -584,7 +584,7 @@ function ProjeKarti({ proje, sira, duraklat, ac }) {
   );
 }
 
-// Kapalıyken gösterilen proje sayısı (mobilde kartlar uzun olduğu için bir eksik)
+// JSON'da hiçbir projede "oneCikan" yoksa kapalıyken gösterilecek sayı (mobilde kartlar uzun olduğu için bir eksik)
 const ILK_MASAUSTU = 4;
 const ILK_MOBIL = 3;
 
@@ -593,8 +593,13 @@ export default function Projects() {
   const [secili, setSecili] = useState(null);
   const [hepsi, setHepsi] = useState(false);
   const kapat = useCallback(() => setSecili(null), []);
-  const projeler = veri.projeler;
-  const fazla = projeler.length > ILK_MOBIL;
+  // "oneCikan": true olanlar kapalıyken görünür; açılınca önce onlar, sonra diğerleri gelir
+  const isaretli = veri.projeler.some((p) => "oneCikan" in p);
+  const oneCikanlar = veri.projeler.filter((p) => p.oneCikan);
+  const projeler = isaretli ? [...oneCikanlar, ...veri.projeler.filter((p) => !p.oneCikan)] : veri.projeler;
+  const ilkMasaustu = isaretli ? oneCikanlar.length : ILK_MASAUSTU;
+  const ilkMobil = isaretli ? oneCikanlar.length : ILK_MOBIL;
+  const fazla = projeler.length > ilkMobil;
 
   const degistir = () => {
     if (hepsi) document.getElementById("projeler")?.scrollIntoView({ behavior: "smooth" });
@@ -606,11 +611,11 @@ export default function Projects() {
       <div className="container-site">
         <SectionHeading no="01" baslik={t.projelerBaslik} alt={t.projelerAlt} />
         <div className="grid gap-5 md:grid-cols-2">
-          {(hepsi ? projeler : projeler.slice(0, ILK_MASAUSTU)).map((proje, i) => (
+          {(hepsi ? projeler : projeler.slice(0, ilkMasaustu)).map((proje, i) => (
             <Reveal
               key={proje.baslik}
               delay={(i % 2) * 0.08}
-              className={!hepsi && i >= ILK_MOBIL ? "max-md:hidden" : ""}
+              className={!hepsi && i >= ilkMobil ? "max-md:hidden" : ""}
             >
               <ProjeKarti
                 proje={proje}
@@ -632,11 +637,11 @@ export default function Projects() {
               ) : (
                 <>
                   <FiChevronDown /> {t.tumProjeler}
-                  {projeler.length > ILK_MOBIL && (
-                    <span className="font-mono text-muted md:hidden">+{projeler.length - ILK_MOBIL}</span>
+                  {projeler.length > ilkMobil && (
+                    <span className="font-mono text-muted md:hidden">+{projeler.length - ilkMobil}</span>
                   )}
-                  {projeler.length > ILK_MASAUSTU && (
-                    <span className="hidden font-mono text-muted md:inline">+{projeler.length - ILK_MASAUSTU}</span>
+                  {projeler.length > ilkMasaustu && (
+                    <span className="hidden font-mono text-muted md:inline">+{projeler.length - ilkMasaustu}</span>
                   )}
                 </>
               )}
