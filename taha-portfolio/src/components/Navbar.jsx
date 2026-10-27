@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { FiMoon, FiSun, FiMonitor, FiMenu, FiX, FiDroplet } from "react-icons/fi";
+import { FiMoon, FiSun, FiMenu, FiX, FiDroplet } from "react-icons/fi";
 import { useSite } from "../context/SiteContext";
 import { vurguRenkleri } from "../i18n";
 
@@ -32,32 +32,28 @@ function useAktifBolum() {
 
 function TemaSecici() {
   const { theme, setTheme, t } = useSite();
-  const secenekler = [
-    { deger: "light", ikon: FiSun, ad: t.ayarlar.acik },
-    { deger: "dark", ikon: FiMoon, ad: t.ayarlar.koyu },
-    { deger: "system", ikon: FiMonitor, ad: t.ayarlar.sistem },
-  ];
+  // Kayıtlı tercih yoksa ("system") bilgisayarın teması geçerlidir; tıklayınca açık/koyu arasında geçilir
+  const koyu = theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+  const etiket = koyu ? t.ayarlar.acik : t.ayarlar.koyu;
   return (
-    <div className="flex rounded-full border border-line bg-surface/60 p-0.5" role="radiogroup" aria-label={t.ayarlar.tema}>
-      {secenekler.map(({ deger, ikon: Ikon, ad }) => (
-        <button
-          key={deger}
-          role="radio"
-          aria-checked={theme === deger}
-          title={ad}
-          aria-label={ad}
-          onClick={() => setTheme(deger)}
-          className={`relative grid h-8 w-8 place-items-center rounded-full text-sm transition-colors ${
-            theme === deger ? "text-bg" : "text-muted hover:text-fg"
-          }`}
+    <button
+      onClick={() => setTheme(koyu ? "light" : "dark")}
+      aria-label={etiket}
+      title={etiket}
+      className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-line bg-surface/60 text-accent transition-colors hover:border-accent/60"
+    >
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={koyu ? "ay" : "gunes"}
+          initial={{ y: 20, rotate: -90, opacity: 0 }}
+          animate={{ y: 0, rotate: 0, opacity: 1 }}
+          exit={{ y: -20, rotate: 90, opacity: 0 }}
+          transition={{ duration: 0.25 }}
         >
-          {theme === deger && (
-            <motion.span layoutId="tema-secili" className="absolute inset-0 rounded-full bg-accent" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
-          )}
-          <Ikon className="relative" />
-        </button>
-      ))}
-    </div>
+          {koyu ? <FiMoon /> : <FiSun />}
+        </motion.span>
+      </AnimatePresence>
+    </button>
   );
 }
 
