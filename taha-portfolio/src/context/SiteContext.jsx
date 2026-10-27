@@ -49,7 +49,11 @@ async function veriCek(dil) {
 
 export function SiteProvider({ children }) {
   const [lang, setLang] = useState(baslangicDili);
-  const [theme, setTheme] = useState(() => kayitliOku("theme", "system"));
+  // Varsayılan koyu tema; eski sürümlerden kalan "system" gibi değerler de koyuya döner
+  const [theme, setTheme] = useState(() => {
+    const kayitli = kayitliOku("theme", "dark");
+    return ["light", "dark", "red"].includes(kayitli) ? kayitli : "dark";
+  });
   const [accent, setAccent] = useState(() => kayitliOku("accent", "cyan"));
   const [veri, setVeri] = useState(null);
   const [hata, setHata] = useState(null);
@@ -76,18 +80,12 @@ export function SiteProvider({ children }) {
 
   useEffect(() => {
     const kok = document.documentElement;
-    const medya = matchMedia("(prefers-color-scheme: dark)");
-    const uygula = () => {
-      const kirmizi = theme === "red";
-      const koyu = kirmizi || theme === "dark" || (theme === "system" && medya.matches);
-      kok.classList.toggle("dark", koyu);
-      kok.classList.toggle("kirmizi", kirmizi);
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", kirmizi ? "#120608" : koyu ? "#09090b" : "#fafafa");
-    };
-    uygula();
+    const kirmizi = theme === "red";
+    const koyu = theme !== "light";
+    kok.classList.toggle("dark", koyu);
+    kok.classList.toggle("kirmizi", kirmizi);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", kirmizi ? "#120608" : koyu ? "#09090b" : "#fafafa");
     kaydet("theme", theme);
-    medya.addEventListener("change", uygula);
-    return () => medya.removeEventListener("change", uygula);
   }, [theme]);
 
   useEffect(() => {

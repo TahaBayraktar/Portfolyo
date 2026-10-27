@@ -36,9 +36,6 @@ function KirmiziIkon() {
 
 function TemaSecici() {
   const { theme, setTheme, t } = useSite();
-  // Kayıtlı tercih yoksa ("system") bilgisayarın teması seçili görünür
-  const secili =
-    theme === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : theme;
   const secenekler = [
     { deger: "light", ikon: FiSun, ad: t.ayarlar.acik },
     { deger: "dark", ikon: FiMoon, ad: t.ayarlar.koyu },
@@ -50,15 +47,15 @@ function TemaSecici() {
         <button
           key={deger}
           role="radio"
-          aria-checked={secili === deger}
+          aria-checked={theme === deger}
           title={ad}
           aria-label={ad}
           onClick={() => setTheme(deger)}
           className={`relative grid h-8 w-8 place-items-center rounded-full text-sm transition-colors ${
-            secili === deger ? "text-bg" : "text-muted hover:text-fg"
+            theme === deger ? "text-bg" : "text-muted hover:text-fg"
           }`}
         >
-          {secili === deger && (
+          {theme === deger && (
             <motion.span layoutId="tema-secili" className="absolute inset-0 rounded-full bg-accent" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
           )}
           <span className="relative">
