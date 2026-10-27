@@ -20,10 +20,6 @@ export default {
         mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
       },
       keyframes: {
-        marquee: {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
-        },
         "spin-slow": {
           to: { transform: "rotate(360deg)" },
         },
@@ -33,7 +29,6 @@ export default {
         },
       },
       animation: {
-        marquee: "marquee 35s linear infinite",
         "spin-slow": "spin-slow 8s linear infinite",
         blink: "blink 1s step-end infinite",
       },
