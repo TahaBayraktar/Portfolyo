@@ -141,15 +141,16 @@ function Pipeline() {
 }
 
 function KodKarti({ profil }) {
-  // Kartın içeriği JSON'daki "kodKarti" alanından gelir; yoksa yetenek listesinden türetilir
+  // Kartın içeriği JSON'daki "kodKarti" alanından gelir; alan hiç yoksa yetenek listesinden türetilir.
+  // kodKarti içinde olmayan satırlar (ör. stack) gösterilmez.
   const kart = profil.kodKarti || {};
-  const yigin = kart.stack || (profil.sliderYetenekler || []).slice(0, 3).map((y) => y.name);
+  const yigin = profil.kodKarti ? kart.stack : (profil.sliderYetenekler || []).slice(0, 3).map((y) => y.name);
   const deger = (metin) => <span className="text-accent">&quot;{metin}&quot;</span>;
   const developerJs = [
     [<span key="k" className="text-accent-2">const</span>, " developer = {"],
     ["  name: ", deger(profil.adSoyad), ","],
     ["  role: ", kart.rol ? <Dizi ogeler={kart.rol} /> : deger(profil.unvan), ","],
-    ["  stack: ", <Dizi key="s" ogeler={yigin} />, ","],
+    ...(yigin?.length ? [["  stack: ", <Dizi key="s" ogeler={yigin} />, ","]] : []),
     ...(kart.devops ? [["  devops: ", <Dizi key="d" ogeler={kart.devops} />, ","]] : []),
     ["  location: ", deger(profil.kisiselBilgiler?.sehir), ","],
     ["  available: ", <span key="a" className="text-accent-2">true</span>],
