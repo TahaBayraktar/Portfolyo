@@ -1,23 +1,54 @@
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import { FiArrowDown, FiArrowRight } from "react-icons/fi";
+import { FiArrowDown, FiArrowRight, FiCheck } from "react-icons/fi";
 import { useSite } from "../context/SiteContext";
 import { Magnetic } from "../components/ui";
 
-function useDaktilo(metin, hiz = 55) {
+// Roller arasında döner: yaz → bekle → sil → sonraki
+function useDaktiloDongu(roller, yazmaHizi = 60, silmeHizi = 30, bekleme = 1800) {
   const [yazilan, setYazilan] = useState("");
+  const azHareket = useReducedMotion();
+  const anahtar = roller.join("|");
+
   useEffect(() => {
+    const liste = anahtar.split("|").filter(Boolean);
+    if (liste.length === 0) return;
+    if (azHareket) {
+      setYazilan(liste.join(" · "));
+      return;
+    }
+    let rol = 0;
+    let uzunluk = 0;
+    let siliyor = false;
+    let zamanlayici;
+    const adim = () => {
+      const metin = liste[rol];
+      if (!siliyor) {
+        uzunluk += 1;
+        setYazilan(metin.slice(0, uzunluk));
+        if (uzunluk >= metin.length) {
+          if (liste.length === 1) return;
+          siliyor = true;
+          zamanlayici = setTimeout(adim, bekleme);
+          return;
+        }
+        zamanlayici = setTimeout(adim, yazmaHizi);
+      } else {
+        uzunluk -= 1;
+        setYazilan(metin.slice(0, uzunluk));
+        if (uzunluk <= 0) {
+          siliyor = false;
+          rol = (rol + 1) % liste.length;
+        }
+        zamanlayici = setTimeout(adim, silmeHizi);
+      }
+    };
     setYazilan("");
-    if (!metin) return;
-    let i = 0;
-    const id = setInterval(() => {
-      i += 1;
-      setYazilan(metin.slice(0, i));
-      if (i >= metin.length) clearInterval(id);
-    }, hiz);
-    return () => clearInterval(id);
-  }, [metin, hiz]);
+    zamanlayici = setTimeout(adim, 400);
+    return () => clearTimeout(zamanlayici);
+  }, [anahtar, yazmaHizi, silmeHizi, bekleme, azHareket]);
+
   return yazilan;
 }
 
@@ -27,39 +58,162 @@ const giris = (gecikme) => ({
   transition: { duration: 0.7, delay: gecikme, ease: [0.22, 1, 0.36, 1] },
 });
 
+// ["Java", "Python"] → "Java", "Python" (vurgulu)
+function Dizi({ ogeler }) {
+  return (
+    <>
+      [
+      {ogeler.map((oge, i) => (
+        <span key={oge}>
+          <span className="text-accent">&quot;{oge}&quot;</span>
+          {i < ogeler.length - 1 && ", "}
+        </span>
+      ))}
+      ]
+    </>
+  );
+}
+
+const DEPLOY_YML = [
+  [<span key="a" className="text-accent-2">name</span>, ": deploy"],
+  [<span key="a" className="text-accent-2">on</span>, ": [push]"],
+  [<span key="a" className="text-accent-2">jobs</span>, ":"],
+  ["  ship:"],
+  ["    steps:"],
+  ["      - run: ", <span key="b" className="text-accent">docker build -t api .</span>],
+  ["      - run: ", <span key="b" className="text-accent">docker push $REG/api</span>],
+  ["      - run: ", <span key="b" className="text-accent">ssh prod compose up -d</span>],
+];
+
+const PIPELINE = ["build", "test", "docker", "deploy"];
+
+// build → test → docker → deploy aşamaları sırayla tamamlanır, "live" olunca baştan başlar
+function Pipeline() {
+  const azHareket = useReducedMotion();
+  const [adim, setAdim] = useState(azHareket ? PIPELINE.length : 0);
+
+  useEffect(() => {
+    if (azHareket) return;
+    const sure = adim >= PIPELINE.length ? 2200 : 850;
+    const id = setTimeout(() => setAdim((a) => (a >= PIPELINE.length ? 0 : a + 1)), sure);
+    return () => clearTimeout(id);
+  }, [adim, azHareket]);
+
+  const canli = adim >= PIPELINE.length;
+  return (
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 border-t border-line px-3 py-3 font-mono text-[11px] sm:px-5 sm:text-xs">
+      {PIPELINE.map((asama, i) => {
+        const bitti = i < adim;
+        const calisiyor = i === adim;
+        return (
+          <span key={asama} className="flex items-center gap-1.5">
+            <span
+              className={`flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors duration-300 ${
+                canli
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                  : bitti
+                  ? "border-accent/40 bg-accent/10 text-accent"
+                  : calisiyor
+                    ? "border-accent-2/50 text-fg"
+                    : "border-line text-muted"
+              }`}
+            >
+              {bitti ? (
+                <FiCheck className="h-3 w-3" />
+              ) : (
+                <span className={`h-1.5 w-1.5 rounded-full ${calisiyor ? "animate-pulse bg-accent-2" : "bg-line"}`} />
+              )}
+              {asama}
+            </span>
+            {i < PIPELINE.length - 1 && <span className="text-muted/50">→</span>}
+          </span>
+        );
+      })}
+      <span
+        className={`ml-auto hidden items-center gap-1.5 rounded-full px-2 py-0.5 transition-all duration-300 sm:flex ${
+          canli ? "bg-emerald-500/15 text-emerald-400 opacity-100" : "opacity-0"
+        }`}
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> live
+      </span>
+    </div>
+  );
+}
+
 function KodKarti({ profil }) {
-  const yiginlar = (profil.sliderYetenekler || []).slice(0, 3).map((y) => `"${y.name}"`);
-  const satirlar = [
+  // Kartın içeriği JSON'daki "kodKarti" alanından gelir; yoksa yetenek listesinden türetilir
+  const kart = profil.kodKarti || {};
+  const yigin = kart.stack || (profil.sliderYetenekler || []).slice(0, 3).map((y) => y.name);
+  const deger = (metin) => <span className="text-accent">&quot;{metin}&quot;</span>;
+  const developerJs = [
     [<span key="k" className="text-accent-2">const</span>, " developer = {"],
-    ["  name: ", <span key="n" className="text-accent">&quot;{profil.adSoyad}&quot;</span>, ","],
-    ["  role: ", <span key="r" className="text-accent">&quot;{profil.unvan}&quot;</span>, ","],
-    ["  stack: [", <span key="s" className="text-accent">{yiginlar.join(", ")}</span>, "],"],
-    ["  location: ", <span key="l" className="text-accent">&quot;{profil.kisiselBilgiler?.sehir}&quot;</span>, ","],
+    ["  name: ", deger(profil.adSoyad), ","],
+    ["  role: ", kart.rol ? <Dizi ogeler={kart.rol} /> : deger(profil.unvan), ","],
+    ["  stack: ", <Dizi key="s" ogeler={yigin} />, ","],
+    ...(kart.devops ? [["  devops: ", <Dizi key="d" ogeler={kart.devops} />, ","]] : []),
+    ["  location: ", deger(profil.kisiselBilgiler?.sehir), ","],
     ["  available: ", <span key="a" className="text-accent-2">true</span>],
     ["};"],
   ];
+  const sekmeler = [
+    { ad: "developer.js", satirlar: developerJs },
+    { ad: "deploy.yml", satirlar: DEPLOY_YML },
+  ];
+  const azHareket = useReducedMotion();
+  const [aktif, setAktif] = useState(0);
+  const [elle, setElle] = useState(false);
+
+  // Kullanıcı sekmeye tıklayana kadar iki dosya arasında kendiliğinden geçiş
+  useEffect(() => {
+    if (elle || azHareket) return;
+    const id = setTimeout(() => setAktif((a) => (a + 1) % 2), aktif === 0 ? 6500 : 5000);
+    return () => clearTimeout(id);
+  }, [aktif, elle, azHareket]);
+
   return (
     <div className="kart overflow-hidden shadow-2xl shadow-accent/5">
-      <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+      <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
         <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
         <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
         <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-        <span className="ml-2 font-mono text-xs text-muted">developer.js</span>
+        <div className="ml-2 flex gap-1" role="tablist">
+          {sekmeler.map((sekme, i) => (
+            <button
+              key={sekme.ad}
+              role="tab"
+              aria-selected={aktif === i}
+              onClick={() => {
+                setAktif(i);
+                setElle(true);
+              }}
+              className={`rounded-md px-2 py-1 font-mono text-xs transition-colors ${
+                aktif === i ? "bg-bg/80 text-fg" : "text-muted hover:text-fg"
+              }`}
+            >
+              {sekme.ad}
+            </button>
+          ))}
+        </div>
       </div>
-      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-6 sm:p-5 sm:text-sm">
-        {satirlar.map((satir, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 + i * 0.08 }}
-            className="flex"
-          >
-            <span className="mr-4 w-4 select-none text-right text-muted/50">{i + 1}</span>
-            <span className="whitespace-pre">{satir}</span>
+      <pre className="overflow-x-auto p-3 font-mono text-[11.5px] leading-6 sm:p-5 sm:text-sm">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={aktif} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            {sekmeler[aktif].satirlar.map((satir, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 + i * 0.05 }}
+                className="flex"
+              >
+                <span className="mr-3 w-4 shrink-0 select-none text-right text-muted/50 sm:mr-4">{i + 1}</span>
+                <span className="whitespace-pre">{satir}</span>
+              </motion.div>
+            ))}
           </motion.div>
-        ))}
+        </AnimatePresence>
       </pre>
+      <Pipeline />
     </div>
   );
 }
@@ -67,7 +221,7 @@ function KodKarti({ profil }) {
 export default function Hero() {
   const { veri, t } = useSite();
   const profil = veri.profil;
-  const unvan = useDaktilo(profil.unvan);
+  const unvan = useDaktiloDongu(profil.roller?.length ? profil.roller : [profil.unvan]);
 
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-16 pt-28">

@@ -100,8 +100,8 @@ export default function Skills() {
   const { sliderYetenekler = [], araclar = [], yapayZeka = [] } = veri.profil;
 
   const seritler = [
-    { baslik: t.teknolojiler, ogeler: sliderYetenekler },
-    { baslik: t.araclar, ogeler: araclar, ters: true },
+    { baslik: t.araclar, ogeler: araclar },
+    { baslik: t.teknolojiler, ogeler: sliderYetenekler, ters: true },
     { baslik: t.yapayZeka, ogeler: yapayZeka },
   ].filter((s) => s.ogeler.length > 0);
 
