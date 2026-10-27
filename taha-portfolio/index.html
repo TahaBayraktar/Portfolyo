@@ -38,8 +38,9 @@
         try {
           var d = document.documentElement;
           var tema = localStorage.getItem("theme") || "system";
-          var koyu = tema === "dark" || (tema === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+          var koyu = tema === "dark" || tema === "red" || (tema === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
           d.classList.toggle("dark", koyu);
+          d.classList.toggle("kirmizi", tema === "red");
           d.dataset.accent = localStorage.getItem("accent") || "cyan";
           var dil = localStorage.getItem("lang");
           if (dil) d.lang = dil;

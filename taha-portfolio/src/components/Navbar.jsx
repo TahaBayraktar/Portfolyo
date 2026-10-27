@@ -30,35 +30,48 @@ function useAktifBolum() {
   return aktif;
 }
 
+function KirmiziIkon() {
+  return <span className="block h-3.5 w-3.5 rounded-full bg-gradient-to-br from-[#f8485e] to-[#fb923c] ring-1 ring-white/70" />;
+}
+
 function TemaSecici() {
   const { theme, setTheme, t } = useSite();
-  // Kayıtlı tercih yoksa ("system") bilgisayarın teması geçerlidir; tıklayınca açık/koyu arasında geçilir
-  const koyu = theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
-  const etiket = koyu ? t.ayarlar.acik : t.ayarlar.koyu;
+  // Kayıtlı tercih yoksa ("system") bilgisayarın teması seçili görünür
+  const secili =
+    theme === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : theme;
+  const secenekler = [
+    { deger: "light", ikon: FiSun, ad: t.ayarlar.acik },
+    { deger: "dark", ikon: FiMoon, ad: t.ayarlar.koyu },
+    { deger: "red", ikon: KirmiziIkon, ad: t.ayarlar.kirmizi },
+  ];
   return (
-    <button
-      onClick={() => setTheme(koyu ? "light" : "dark")}
-      aria-label={etiket}
-      title={etiket}
-      className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-line bg-surface/60 text-accent transition-colors hover:border-accent/60"
-    >
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.span
-          key={koyu ? "ay" : "gunes"}
-          initial={{ y: 20, rotate: -90, opacity: 0 }}
-          animate={{ y: 0, rotate: 0, opacity: 1 }}
-          exit={{ y: -20, rotate: 90, opacity: 0 }}
-          transition={{ duration: 0.25 }}
+    <div className="flex rounded-full border border-line bg-surface/60 p-0.5" role="radiogroup" aria-label={t.ayarlar.tema}>
+      {secenekler.map(({ deger, ikon: Ikon, ad }) => (
+        <button
+          key={deger}
+          role="radio"
+          aria-checked={secili === deger}
+          title={ad}
+          aria-label={ad}
+          onClick={() => setTheme(deger)}
+          className={`relative grid h-8 w-8 place-items-center rounded-full text-sm transition-colors ${
+            secili === deger ? "text-bg" : "text-muted hover:text-fg"
+          }`}
         >
-          {koyu ? <FiMoon /> : <FiSun />}
-        </motion.span>
-      </AnimatePresence>
-    </button>
+          {secili === deger && (
+            <motion.span layoutId="tema-secili" className="absolute inset-0 rounded-full bg-accent" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+          )}
+          <span className="relative">
+            <Ikon />
+          </span>
+        </button>
+      ))}
+    </div>
   );
 }
 
 function RenkSecici() {
-  const { accent, setAccent, t } = useSite();
+  const { accent, setAccent, theme, t } = useSite();
   const [acik, setAcik] = useState(false);
   const ref = useRef(null);
 
@@ -68,6 +81,9 @@ function RenkSecici() {
     document.addEventListener("pointerdown", disTik);
     return () => document.removeEventListener("pointerdown", disTik);
   }, [acik]);
+
+  // Kırmızı tema kendi vurgu rengini kullanır
+  if (theme === "red") return null;
 
   return (
     <div ref={ref} className="relative">

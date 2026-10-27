@@ -78,9 +78,11 @@ export function SiteProvider({ children }) {
     const kok = document.documentElement;
     const medya = matchMedia("(prefers-color-scheme: dark)");
     const uygula = () => {
-      const koyu = theme === "dark" || (theme === "system" && medya.matches);
+      const kirmizi = theme === "red";
+      const koyu = kirmizi || theme === "dark" || (theme === "system" && medya.matches);
       kok.classList.toggle("dark", koyu);
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", koyu ? "#09090b" : "#fafafa");
+      kok.classList.toggle("kirmizi", kirmizi);
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", kirmizi ? "#120608" : koyu ? "#09090b" : "#fafafa");
     };
     uygula();
     kaydet("theme", theme);

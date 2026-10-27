@@ -47,7 +47,7 @@ export const metinler = {
     mailGonder: "Mail Gönder",
     haklar: "Tüm hakları saklıdır.",
     yukari: "Yukarı çık",
-    ayarlar: { acik: "Açık temaya geç", koyu: "Koyu temaya geç", renk: "Vurgu rengi", dil: "Dil", menu: "Menü" },
+    ayarlar: { tema: "Tema", acik: "Açık", koyu: "Koyu", kirmizi: "Kırmızı", renk: "Vurgu rengi", dil: "Dil", menu: "Menü" },
   },
   en: {
     nav: { hakkimda: "About", yetenekler: "Skills", deneyim: "Experience", projeler: "Projects", iletisim: "Contact" },
@@ -96,7 +96,7 @@ export const metinler = {
     mailGonder: "Send Email",
     haklar: "All rights reserved.",
     yukari: "Back to top",
-    ayarlar: { acik: "Switch to light theme", koyu: "Switch to dark theme", renk: "Accent color", dil: "Language", menu: "Menu" },
+    ayarlar: { tema: "Theme", acik: "Light", koyu: "Dark", kirmizi: "Red", renk: "Accent color", dil: "Language", menu: "Menu" },
   },
 };
 

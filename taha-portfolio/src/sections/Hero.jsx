@@ -28,7 +28,7 @@ const giris = (gecikme) => ({
 });
 
 function KodKarti({ profil }) {
-  const yiginlar = (profil.sliderYetenekler || []).slice(0, 4).map((y) => `"${y.name}"`);
+  const yiginlar = (profil.sliderYetenekler || []).slice(0, 3).map((y) => `"${y.name}"`);
   const satirlar = [
     [<span key="k" className="text-accent-2">const</span>, " developer = {"],
     ["  name: ", <span key="n" className="text-accent">&quot;{profil.adSoyad}&quot;</span>, ","],
