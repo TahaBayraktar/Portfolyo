@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, animate, motion, useInView, useMotionValue, useReducedMotion } from "motion/react";
 import {
   FiArrowUpRight,
+  FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronUp,
   FiExternalLink,
   FiFileText,
   FiImage,
@@ -582,18 +584,34 @@ function ProjeKarti({ proje, sira, duraklat, ac }) {
   );
 }
 
+// Kapalıyken gösterilen proje sayısı (mobilde kartlar uzun olduğu için bir eksik)
+const ILK_MASAUSTU = 4;
+const ILK_MOBIL = 3;
+
 export default function Projects() {
   const { veri, t } = useSite();
   const [secili, setSecili] = useState(null);
+  const [hepsi, setHepsi] = useState(false);
   const kapat = useCallback(() => setSecili(null), []);
+  const projeler = veri.projeler;
+  const fazla = projeler.length > ILK_MOBIL;
+
+  const degistir = () => {
+    if (hepsi) document.getElementById("projeler")?.scrollIntoView({ behavior: "smooth" });
+    setHepsi((h) => !h);
+  };
 
   return (
     <section id="projeler" className="py-16 md:py-24">
       <div className="container-site">
-        <SectionHeading no="04" baslik={t.projelerBaslik} alt={t.projelerAlt} />
+        <SectionHeading no="01" baslik={t.projelerBaslik} alt={t.projelerAlt} />
         <div className="grid gap-5 md:grid-cols-2">
-          {veri.projeler.map((proje, i) => (
-            <Reveal key={proje.baslik} delay={(i % 2) * 0.08}>
+          {(hepsi ? projeler : projeler.slice(0, ILK_MASAUSTU)).map((proje, i) => (
+            <Reveal
+              key={proje.baslik}
+              delay={(i % 2) * 0.08}
+              className={!hepsi && i >= ILK_MOBIL ? "max-md:hidden" : ""}
+            >
               <ProjeKarti
                 proje={proje}
                 sira={i + 1}
@@ -603,6 +621,28 @@ export default function Projects() {
             </Reveal>
           ))}
         </div>
+
+        {fazla && (
+          <div className="mt-8 flex justify-center">
+            <button onClick={degistir} className="buton-ikincil" aria-expanded={hepsi}>
+              {hepsi ? (
+                <>
+                  <FiChevronUp /> {t.dahaAz}
+                </>
+              ) : (
+                <>
+                  <FiChevronDown /> {t.tumProjeler}
+                  {projeler.length > ILK_MOBIL && (
+                    <span className="font-mono text-muted md:hidden">+{projeler.length - ILK_MOBIL}</span>
+                  )}
+                  {projeler.length > ILK_MASAUSTU && (
+                    <span className="hidden font-mono text-muted md:inline">+{projeler.length - ILK_MASAUSTU}</span>
+                  )}
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {createPortal(

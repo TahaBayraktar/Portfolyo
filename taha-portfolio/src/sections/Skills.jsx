@@ -108,7 +108,7 @@ export default function Skills() {
   return (
     <section id="yetenekler" className="py-16 md:py-24">
       <div className="container-site">
-        <SectionHeading no="02" baslik={t.yeteneklerBaslik} alt={t.yeteneklerAlt} />
+        <SectionHeading no="03" baslik={t.yeteneklerBaslik} alt={t.yeteneklerAlt} />
       </div>
 
       <Reveal className="space-y-5">

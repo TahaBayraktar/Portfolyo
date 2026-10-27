@@ -4,7 +4,7 @@ import { FiMoon, FiSun, FiMenu, FiX, FiDroplet } from "react-icons/fi";
 import { useSite } from "../context/SiteContext";
 import { vurguRenkleri } from "../i18n";
 
-const BOLUMLER = ["hakkimda", "yetenekler", "deneyim", "projeler", "iletisim"];
+const BOLUMLER = ["projeler", "deneyim", "yetenekler", "hakkimda", "iletisim"];
 
 function useAktifBolum() {
   const [aktif, setAktif] = useState("");

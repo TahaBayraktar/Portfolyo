@@ -71,10 +71,10 @@ export default function App() {
         {veri ? (
           <>
             <Hero />
-            <About />
-            <Skills />
-            <Experience />
             <Projects />
+            <Experience />
+            <Skills />
+            <About />
             <Contact />
           </>
         ) : (

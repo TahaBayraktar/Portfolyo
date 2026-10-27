@@ -25,7 +25,7 @@ export default function About() {
   return (
     <section id="hakkimda" className="py-16 md:py-24">
       <div className="container-site">
-        <SectionHeading no="01" baslik={t.hakkimdaBaslik} alt={t.hakkimdaAlt} />
+        <SectionHeading no="04" baslik={t.hakkimdaBaslik} alt={t.hakkimdaAlt} />
 
         <div className="grid gap-4 md:grid-cols-6">
           {kisisel.kariyerHedefi && (

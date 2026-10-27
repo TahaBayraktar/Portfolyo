@@ -10,7 +10,7 @@ export default function Experience() {
   return (
     <section id="deneyim" className="py-16 md:py-24">
       <div className="container-site">
-        <SectionHeading no="03" baslik={t.deneyimBaslik} alt={t.deneyimAlt} />
+        <SectionHeading no="02" baslik={t.deneyimBaslik} alt={t.deneyimAlt} />
 
         <ol className="relative space-y-6 md:ml-4 md:border-l md:border-line md:pl-10">
           {deneyimler.map((deneyim, i) => (
