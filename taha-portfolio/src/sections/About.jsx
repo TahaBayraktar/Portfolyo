@@ -23,7 +23,7 @@ export default function About() {
   ].filter((b) => b.deger);
 
   return (
-    <section id="hakkimda" className="py-24 md:py-32">
+    <section id="hakkimda" className="py-16 md:py-24">
       <div className="container-site">
         <SectionHeading no="01" baslik={t.hakkimdaBaslik} alt={t.hakkimdaAlt} />
 

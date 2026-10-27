@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { motion, useMotionValue, useSpring, useReducedMotion } from "motion/react";
 
-// Görünür alana girince yumuşakça beliren sarmalayıcı
+// Görünür alana girince yumuşakça beliren sarmalayıcı.
+// Alt kenardaki pozitif pay sayesinde içerik ekrana girmeden hemen önce belirir, kaydırırken boş ekran kalmaz.
 export function Reveal({ children, delay = 0, y = 24, className = "", as = "div" }) {
   const Etiket = motion[as];
   return (
@@ -9,8 +10,8 @@ export function Reveal({ children, delay = 0, y = 24, className = "", as = "div"
       className={className}
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, margin: "0px 0px 15% 0px" }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </Etiket>

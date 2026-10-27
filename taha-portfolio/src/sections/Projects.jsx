@@ -76,7 +76,7 @@ function ProjeModal({ proje, kapat }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/85 sm:items-center sm:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -96,7 +96,7 @@ function ProjeModal({ proje, kapat }) {
         <button
           onClick={kapat}
           aria-label={t.kapat}
-          className="absolute right-3 top-3 z-20 grid h-10 w-10 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/70"
+          className="absolute right-3 top-3 z-20 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white transition-colors hover:bg-black/70"
         >
           <FiX />
         </button>
@@ -138,12 +138,12 @@ function ProjeModal({ proje, kapat }) {
                   key={adim}
                   onClick={() => git(adim)}
                   aria-label={etiket}
-                  className={`absolute ${konum} top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-xl text-white backdrop-blur transition-colors hover:bg-black/70 sm:grid`}
+                  className={`absolute ${konum} top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/70 text-xl text-white transition-colors hover:bg-black/70 sm:grid`}
                 >
                   <Ikon />
                 </button>
               ))}
-              <span className="absolute bottom-3 left-3 z-10 rounded-full bg-black/50 px-2.5 py-1 font-mono text-xs text-white backdrop-blur">
+              <span className="absolute bottom-3 left-3 z-10 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-white">
                 {index + 1} / {gorseller.length}
               </span>
             </>
@@ -217,7 +217,7 @@ function ProjeKarti({ proje, sira, ac }) {
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 font-mono text-xs text-white backdrop-blur">
+        <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-white">
           <FiImage /> {proje.gorseller?.length || 0} {t.gorsel}
         </span>
         <span className="absolute right-3 top-3 grid h-10 w-10 translate-y-2 place-items-center rounded-full bg-accent text-lg text-bg opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
@@ -247,7 +247,7 @@ export default function Projects() {
   const kapat = useCallback(() => setSecili(null), []);
 
   return (
-    <section id="projeler" className="py-24 md:py-32">
+    <section id="projeler" className="py-16 md:py-24">
       <div className="container-site">
         <SectionHeading no="04" baslik={t.projelerBaslik} alt={t.projelerAlt} />
         <div className="grid gap-5 md:grid-cols-2">

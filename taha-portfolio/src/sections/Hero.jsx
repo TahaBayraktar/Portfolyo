@@ -72,11 +72,11 @@ export default function Hero() {
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-16 pt-28">
       <div aria-hidden className="izgara-arka absolute inset-0 -z-10" />
-      <div aria-hidden className="absolute -top-40 left-1/2 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-accent/15 blur-[120px]" />
+      <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-[600px] bg-[radial-gradient(ellipse_50%_60%_at_50%_0%,rgb(var(--accent)/0.18),transparent)]" />
 
       <div className="container-site grid items-center gap-12 [&>*]:min-w-0 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         <div>
-          <motion.div {...giris(0)} className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-1 text-xs text-muted backdrop-blur">
+          <motion.div {...giris(0)} className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />

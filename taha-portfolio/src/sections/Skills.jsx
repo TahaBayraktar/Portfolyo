@@ -28,7 +28,7 @@ export default function Skills() {
   const { yetenekler = [], sliderYetenekler = [] } = veri.profil;
 
   return (
-    <section id="yetenekler" className="py-24 md:py-32">
+    <section id="yetenekler" className="py-16 md:py-24">
       <div className="container-site">
         <SectionHeading no="02" baslik={t.yeteneklerBaslik} alt={t.yeteneklerAlt} />
       </div>

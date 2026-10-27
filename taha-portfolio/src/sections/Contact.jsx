@@ -34,14 +34,14 @@ export default function Contact() {
   ].filter((k) => k.deger);
 
   return (
-    <section id="iletisim" className="py-24 md:py-32">
+    <section id="iletisim" className="py-16 md:py-24">
       <div className="container-site">
         <SectionHeading no="05" baslik={t.iletisimBaslik} alt={iletisim.aciklama || t.iletisimAlt} />
 
         <div className="grid gap-4 lg:grid-cols-5">
           <Reveal className="lg:col-span-3">
             <SpotlightCard className="relative flex h-full flex-col justify-between overflow-hidden p-6 sm:p-10">
-              <div aria-hidden className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
+              <div aria-hidden className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgb(var(--accent)/0.2),transparent_65%)]" />
               <div>
                 <p className="flex items-center gap-2 font-mono text-sm text-muted">
                   <FiMail className="text-accent" /> {t.eposta}

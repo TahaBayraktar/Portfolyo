@@ -8,7 +8,7 @@ export default function Experience() {
   if (deneyimler.length === 0) return null;
 
   return (
-    <section id="deneyim" className="py-24 md:py-32">
+    <section id="deneyim" className="py-16 md:py-24">
       <div className="container-site">
         <SectionHeading no="03" baslik={t.deneyimBaslik} alt={t.deneyimAlt} />
 
