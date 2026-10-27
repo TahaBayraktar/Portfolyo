@@ -149,8 +149,8 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        kaydirildi || menuAcik ? "border-b border-line/80 bg-bg/75 backdrop-blur-xl" : "border-b border-transparent"
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+        kaydirildi || menuAcik ? "border-b border-line/80 bg-bg/95" : "border-b border-transparent"
       }`}
     >
       <div className="container-site flex h-16 items-center justify-between gap-4">
