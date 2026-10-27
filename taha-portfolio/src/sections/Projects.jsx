@@ -1,7 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
-import { FiArrowUpRight, FiChevronLeft, FiChevronRight, FiExternalLink, FiFileText, FiImage, FiX } from "react-icons/fi";
+import { AnimatePresence, animate, motion, useInView, useMotionValue, useReducedMotion } from "motion/react";
+import {
+  FiArrowUpRight,
+  FiChevronLeft,
+  FiChevronRight,
+  FiExternalLink,
+  FiFileText,
+  FiImage,
+  FiMaximize,
+  FiMinimize,
+  FiRotateCcw,
+  FiX,
+  FiZoomIn,
+  FiZoomOut,
+} from "react-icons/fi";
 import { FaGithub } from "react-icons/fa";
 import { useSite } from "../context/SiteContext";
 import { Reveal, SectionHeading, SpotlightCard } from "../components/ui";
@@ -40,6 +53,272 @@ function ProjeLinkleri({ proje, kucuk = false }) {
         <a href={proje.detayDosyasi} target="_blank" rel="noopener noreferrer" className={`buton-ikincil ${boyut}`}>
           <FiFileText /> {t.detay}
         </a>
+      )}
+    </div>
+  );
+}
+
+const MAKS_OLCEK = 5;
+const CIFT_DOKUNUS_MS = 300;
+
+// Ölçek ve kaydırmayı, görsel kutunun dışına taşmayacak şekilde uygular
+function donusumUygula(d, olcek, x, y, yumusak) {
+  const r = d.kutu.current.getBoundingClientRect();
+  olcek = Math.min(MAKS_OLCEK, Math.max(1, olcek));
+  const mx = (r.width * (olcek - 1)) / 2;
+  const my = (r.height * (olcek - 1)) / 2;
+  x = Math.max(-mx, Math.min(mx, x));
+  y = Math.max(-my, Math.min(my, y));
+  if (yumusak) {
+    const ayar = { duration: 0.3, ease: [0.22, 1, 0.36, 1] };
+    animate(d.s, olcek, ayar);
+    animate(d.tx, x, ayar);
+    animate(d.ty, y, ayar);
+  } else {
+    d.s.set(olcek);
+    d.tx.set(x);
+    d.ty.set(y);
+  }
+  d.setYakin(olcek > 1.01);
+}
+
+// Ekrandaki bir noktayı sabit tutarak ölçekler (parmak/imleç altındaki yer kaymaz)
+function noktadanOlcekle(d, clientX, clientY, yeniOlcek, yumusak) {
+  const r = d.kutu.current.getBoundingClientRect();
+  const px = clientX - (r.left + r.width / 2);
+  const py = clientY - (r.top + r.height / 2);
+  const k = Math.min(MAKS_OLCEK, Math.max(1, yeniOlcek)) / d.s.get();
+  donusumUygula(d, yeniOlcek, px - (px - d.tx.get()) * k, py - (py - d.ty.get()) * k, yumusak);
+}
+
+// Modal görseli: iki parmak / tekerlek / çift dokunuş ile yakınlaştırma, yakınken kaydırarak gezinme,
+// normal boyuttayken yana kaydırarak görsel değiştirme, tam ekran
+function ZoomluGorsel({ gorseller, index, yon, git, ad }) {
+  const { t } = useSite();
+  const alan = useRef(null);
+  const kutu = useRef(null);
+  const s = useMotionValue(1);
+  const tx = useMotionValue(0);
+  const ty = useMotionValue(0);
+  const [yakin, setYakin] = useState(false);
+  const [tamEkran, setTamEkran] = useState(false);
+  const isaretler = useRef(new Map());
+  const jest = useRef(null);
+  const sonDokunus = useRef({ zaman: 0, x: 0, y: 0 });
+  const d = { kutu, s, tx, ty, setYakin };
+  const tamEkranDestekli = typeof document !== "undefined" && document.fullscreenEnabled;
+
+  // Görsel değişince yakınlaştırmayı sıfırla
+  useEffect(() => {
+    s.set(1);
+    tx.set(0);
+    ty.set(0);
+    setYakin(false);
+  }, [index, s, tx, ty]);
+
+  // Tekerlek: sayfa kaymasın diye pasif olmayan dinleyici gerekir
+  useEffect(() => {
+    const el = kutu.current;
+    const tekerlek = (e) => {
+      e.preventDefault();
+      noktadanOlcekle({ kutu, s, tx, ty, setYakin }, e.clientX, e.clientY, s.get() * Math.exp(-e.deltaY * 0.002), false);
+    };
+    el.addEventListener("wheel", tekerlek, { passive: false });
+    return () => el.removeEventListener("wheel", tekerlek);
+  }, [s, tx, ty]);
+
+  useEffect(() => {
+    const degisti = () => setTamEkran(document.fullscreenElement === alan.current);
+    document.addEventListener("fullscreenchange", degisti);
+    return () => document.removeEventListener("fullscreenchange", degisti);
+  }, []);
+
+  const merkezdenOlcekle = (carpan) => {
+    const r = kutu.current.getBoundingClientRect();
+    noktadanOlcekle(d, r.left + r.width / 2, r.top + r.height / 2, s.get() * carpan, true);
+  };
+
+  useEffect(() => {
+    const tus = (e) => {
+      const r = kutu.current.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const ctx = { kutu, s, tx, ty, setYakin };
+      if (e.key === "+" || e.key === "=") noktadanOlcekle(ctx, cx, cy, s.get() * 1.6, true);
+      if (e.key === "-") noktadanOlcekle(ctx, cx, cy, s.get() / 1.6, true);
+      if (e.key === "0") donusumUygula(ctx, 1, 0, 0, true);
+    };
+    window.addEventListener("keydown", tus);
+    return () => window.removeEventListener("keydown", tus);
+  }, [s, tx, ty]);
+
+  const tamEkranDegistir = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else alan.current.requestFullscreen?.();
+  };
+
+  const bas = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    isaretler.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const noktalar = [...isaretler.current.values()];
+    if (noktalar.length === 2) {
+      const [a, b] = noktalar;
+      jest.current = {
+        tip: "kistir",
+        mesafe: Math.hypot(a.x - b.x, a.y - b.y),
+        olcek: s.get(),
+        orta: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+      };
+    } else if (noktalar.length === 1) {
+      jest.current = { tip: s.get() > 1.01 ? "gez" : "kaydir", baslaX: e.clientX, baslaY: e.clientY, sonX: e.clientX, sonY: e.clientY };
+    }
+  };
+
+  const hareket = (e) => {
+    if (!isaretler.current.has(e.pointerId)) return;
+    isaretler.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const j = jest.current;
+    if (!j) return;
+    if (j.tip === "kistir" && isaretler.current.size >= 2) {
+      const [a, b] = [...isaretler.current.values()];
+      const orta = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      noktadanOlcekle(d, orta.x, orta.y, (j.olcek * Math.hypot(a.x - b.x, a.y - b.y)) / j.mesafe, false);
+      donusumUygula(d, s.get(), tx.get() + orta.x - j.orta.x, ty.get() + orta.y - j.orta.y, false);
+      j.orta = orta;
+    } else if (j.tip === "gez") {
+      donusumUygula(d, s.get(), tx.get() + e.clientX - j.sonX, ty.get() + e.clientY - j.sonY, false);
+      j.sonX = e.clientX;
+      j.sonY = e.clientY;
+    }
+  };
+
+  const birak = (e) => {
+    if (!isaretler.current.has(e.pointerId)) return;
+    isaretler.current.delete(e.pointerId);
+    const j = jest.current;
+    if (!j) return;
+
+    if (j.tip === "kistir") {
+      // Bir parmak kaldıysa o parmakla gezinmeye devam et
+      const kalan = [...isaretler.current.values()][0];
+      jest.current = kalan ? { tip: "gez", baslaX: kalan.x, baslaY: kalan.y, sonX: kalan.x, sonY: kalan.y } : null;
+      return;
+    }
+    if (isaretler.current.size > 0) return;
+    jest.current = null;
+
+    const dx = e.clientX - j.baslaX;
+    const dy = e.clientY - j.baslaY;
+    if (j.tip === "kaydir" && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+      git(dx < 0 ? 1 : -1);
+      return;
+    }
+    // Neredeyse hareketsiz dokunuş: çift dokunuş/tıklama ise yakınlaştır ya da sıfırla
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      const once = sonDokunus.current;
+      if (e.timeStamp - once.zaman < CIFT_DOKUNUS_MS && Math.hypot(e.clientX - once.x, e.clientY - once.y) < 30) {
+        if (s.get() > 1.01) donusumUygula(d, 1, 0, 0, true);
+        else noktadanOlcekle(d, e.clientX, e.clientY, 2.5, true);
+        sonDokunus.current = { zaman: 0, x: 0, y: 0 };
+      } else {
+        sonDokunus.current = { zaman: e.timeStamp, x: e.clientX, y: e.clientY };
+      }
+    }
+  };
+
+  const iptal = (e) => {
+    isaretler.current.delete(e.pointerId);
+    if (isaretler.current.size === 0) jest.current = null;
+  };
+
+  const kontrolButonu = "grid h-8 w-8 place-items-center rounded-full bg-black/70 text-sm text-white sm:h-10 sm:w-10 sm:text-lg transition-colors hover:bg-black/90 disabled:opacity-40";
+
+  return (
+    <div
+      ref={alan}
+      className={`relative w-full shrink-0 overflow-hidden bg-black ${tamEkran ? "h-full" : "aspect-video"}`}
+    >
+      <div
+        ref={kutu}
+        onPointerDown={bas}
+        onPointerMove={hareket}
+        onPointerUp={birak}
+        onPointerCancel={iptal}
+        className={`absolute inset-0 touch-none select-none ${yakin ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"}`}
+      >
+        <AnimatePresence initial={false} custom={yon} mode="popLayout">
+          <motion.div
+            key={index}
+            custom={yon}
+            variants={{
+              gir: (y) => ({ x: `${y * 100}%`, opacity: 0 }),
+              merkez: { x: 0, opacity: 1 },
+              cik: (y) => ({ x: `${y * -100}%`, opacity: 0 }),
+            }}
+            initial="gir"
+            animate="merkez"
+            exit="cik"
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0"
+          >
+            <motion.img
+              src={gorseller[index]}
+              alt={`${ad} ${index + 1}`}
+              draggable={false}
+              style={{ x: tx, y: ty, scale: s }}
+              className="h-full w-full object-contain"
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {gorseller.length > 1 && !yakin && (
+        <>
+          {[
+            { adim: -1, ikon: FiChevronLeft, etiket: t.onceki, konum: "left-3" },
+            { adim: 1, ikon: FiChevronRight, etiket: t.sonraki, konum: "right-3" },
+          ].map(({ adim, ikon: Ikon, etiket, konum }) => (
+            <button
+              key={adim}
+              onClick={() => git(adim)}
+              aria-label={etiket}
+              className={`absolute ${konum} top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/70 text-xl text-white transition-colors hover:bg-black/90 sm:grid`}
+            >
+              <Ikon />
+            </button>
+          ))}
+        </>
+      )}
+
+      {gorseller.length > 1 && (
+        <span className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-white">
+          {index + 1} / {gorseller.length}
+        </span>
+      )}
+
+      <div className="absolute bottom-2 right-2 z-10 flex gap-1.5 sm:bottom-3 sm:right-3 sm:gap-2">
+        <button onClick={() => merkezdenOlcekle(1 / 1.6)} disabled={!yakin} aria-label={t.uzaklastir} title={t.uzaklastir} className={kontrolButonu}>
+          <FiZoomOut />
+        </button>
+        <button onClick={() => merkezdenOlcekle(1.6)} aria-label={t.yakinlastir} title={t.yakinlastir} className={kontrolButonu}>
+          <FiZoomIn />
+        </button>
+        {yakin && (
+          <button onClick={() => donusumUygula(d, 1, 0, 0, true)} aria-label={t.sifirla} title={t.sifirla} className={kontrolButonu}>
+            <FiRotateCcw />
+          </button>
+        )}
+        {tamEkranDestekli && (
+          <button onClick={tamEkranDegistir} aria-label={t.tamEkran} title={t.tamEkran} className={kontrolButonu}>
+            {tamEkran ? <FiMinimize /> : <FiMaximize />}
+          </button>
+        )}
+      </div>
+
+      {!yakin && (
+        <span className="pointer-events-none absolute left-1/2 top-3 z-10 hidden -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white/90 sm:block">
+          {t.zoomIpucu}
+        </span>
       )}
     </div>
   );
@@ -101,54 +380,7 @@ function ProjeModal({ proje, baslangic = 0, kapat }) {
           <FiX />
         </button>
 
-        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-black">
-          <AnimatePresence initial={false} custom={yon} mode="popLayout">
-            <motion.img
-              key={index}
-              src={gorseller[index]}
-              alt={`${ad} ${index + 1}`}
-              custom={yon}
-              variants={{
-                gir: (y) => ({ x: `${y * 100}%`, opacity: 0 }),
-                merkez: { x: 0, opacity: 1 },
-                cik: (y) => ({ x: `${y * -100}%`, opacity: 0 }),
-              }}
-              initial="gir"
-              animate="merkez"
-              exit="cik"
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={(_, bilgi) => {
-                if (bilgi.offset.x < -60) git(1);
-                else if (bilgi.offset.x > 60) git(-1);
-              }}
-              className="absolute inset-0 h-full w-full cursor-grab object-contain active:cursor-grabbing"
-              draggable={false}
-            />
-          </AnimatePresence>
-
-          {gorseller.length > 1 && (
-            <>
-              {[
-                { adim: -1, ikon: FiChevronLeft, ad: t.onceki, konum: "left-3" },
-                { adim: 1, ikon: FiChevronRight, ad: t.sonraki, konum: "right-3" },
-              ].map(({ adim, ikon: Ikon, ad: etiket, konum }) => (
-                <button
-                  key={adim}
-                  onClick={() => git(adim)}
-                  aria-label={etiket}
-                  className={`absolute ${konum} top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/70 text-xl text-white transition-colors hover:bg-black/70 sm:grid`}
-                >
-                  <Ikon />
-                </button>
-              ))}
-              <span className="absolute bottom-3 left-3 z-10 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-white">
-                {index + 1} / {gorseller.length}
-              </span>
-            </>
-          )}
-        </div>
+        <ZoomluGorsel gorseller={gorseller} index={index} yon={yon} git={git} ad={ad} />
 
         <div className="overflow-y-auto">
           {gorseller.length > 1 && (
